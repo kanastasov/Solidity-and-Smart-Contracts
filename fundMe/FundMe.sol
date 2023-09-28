@@ -6,50 +6,71 @@
 
 pragma solidity ^0.8.18;
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import {PriceConverter} from "./PriceConverter.sol";
+
+error NotOwner();
 
 contract FundMe{
 
-    uint256 public minimumUsd = 1e10;
+    using PriceConverter for uint256;
+
+    uint256 public constant MINIMUM_USD = 50 * 1e18;
 
     address[] public funders;
     mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
 
+    address public immutable i_owner;
+    constructor(){
+        i_owner = msg.sender;
+    }
 
     function fund() public payable{
         //Allow users to send $
         //Have a minimum 5$ sent
         //How do we send ETH to this contract?
-        require(getConversionRate(msg.value) > minimumUsd, "didn't send enough $");  //1ETH
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "didn't send enough $");  //1ETH
+        msg.value.getConversionRate();
         funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] =  addressToAmountFunded[msg.sender] + msg.value;
+        addressToAmountFunded[msg.sender] += msg.value;
 
     }
 
-    function getPrice() public view returns(uint256){
-        //Address 0x694AA1769357215DE4FAC081bf1f309aDC325306 
-        //ABI 
+   
 
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-        (uint80 roundId, int256 price, uint256 startedAt, uint256 timestamp, uint80 anwsweredInRound) = priceFeed.latestRoundData();
-        // price of ETH in terms of USD
-        return uint256(price * 1e10);
+    function withdraw() public onlyOwnner {
 
+        for(uint256 funderIndex = 0; funderIndex < funders.length;funderIndex++){
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        funders = new address[](0);
+        //reset the array
+        // withdraw the funds
+
+        //transfer
+        // payable(msg.sender).transfer(address(this).balance);
+
+        //send
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send failed");
+
+        //call
+        (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call failed");
     }
 
-    function getVersion() public view returns(uint256) {
-        return AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306).version();
-
+    modifier onlyOwnner(){
+        if(msg.sender != i_owner) {
+            revert NotOwner();
+        }
+        _;
     }
 
-    function getConversionRate(uint256 ethAmount) public view returns(uint256){
-        //1 ETH?
-        //2000_000000000000 * 1_000000000000 / 1e18 = 2000
-        uint256 ethPrice = getPrice();
-        uint256 ethAmountInUsed = (ethPrice * ethAmount) / 1e18;
-        return ethAmountInUsed;
-
+    receive() external payable {
+        fund();
     }
 
-    function withdraw() public {}
+    fallback() external payable{
+        fund();
+    }
 }
