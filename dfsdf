@@ -1,0 +1,19 @@
+[33mcommit b88181e78323b5312ec3953c414b5582e08b0fd6[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: kirilanastasoff <kirilanastasoff@gmail.com>
+Date:   Wed Oct 4 17:10:30 2023 +0300
+
+    Foundry project with solidity
+
+[33mcommit 9935b6e83c6d626f17d5a1c8e2ef7bd4ea17a6d4[m
+Author: kirilanastasoff <kirilanastasoff@gmail.com>
+Date:   Wed Oct 4 09:36:28 2023 +0300
+
+    forge install: forge-std
+    
+    v1.6.1
+
+[33mcommit 25b6202289cdc73931b01b9a1e8aafd628c64d59[m
+Author: kirilanastasoff <kirilanastasoff@gmail.com>
+Date:   Wed Oct 4 09:36:25 2023 +0300
+
+    chore: forge init
